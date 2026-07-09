@@ -1,15 +1,16 @@
-import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 import ProfileCard from './components/ProfileCard'
 
+const path = typeof window !== 'undefined' ? window.location.pathname : '/'
+const baseUrl = import.meta.env.BASE_URL || '/'
+const normalizedPath = path.endsWith('/') ? path : `${path}/`
+const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+const isProfile = normalizedPath === normalizedBase || normalizedPath === `${normalizedBase}profile/`
+
 function App() {
-  const [count, setCount] = useState(0)
-
-  const isProfile = typeof window !== 'undefined' && (window.location.pathname === '/profile' || window.location.pathname === '/')
-
   if (isProfile) {
     return <ProfileCard />
   }
@@ -28,13 +29,6 @@ function App() {
             Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
       </section>
 
       <div className="ticks"></div>
@@ -42,7 +36,7 @@ function App() {
       <section id="next-steps">
         <div id="docs">
           <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
+            <use href={`${baseUrl}icons.svg#documentation-icon`}></use>
           </svg>
           <h2>Documentation</h2>
           <p>Your questions, answered</p>
@@ -63,7 +57,7 @@ function App() {
         </div>
         <div id="social">
           <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
+            <use href={`${baseUrl}icons.svg#social-icon`}></use>
           </svg>
           <h2>Connect with us</h2>
           <p>Join the Vite community</p>
@@ -75,7 +69,7 @@ function App() {
                   role="presentation"
                   aria-hidden="true"
                 >
-                  <use href="/icons.svg#github-icon"></use>
+                  <use href={`${baseUrl}icons.svg#github-icon`}></use>
                 </svg>
                 GitHub
               </a>
@@ -87,7 +81,7 @@ function App() {
                   role="presentation"
                   aria-hidden="true"
                 >
-                  <use href="/icons.svg#discord-icon"></use>
+                  <use href={`${baseUrl}icons.svg#discord-icon`}></use>
                 </svg>
                 Discord
               </a>
@@ -99,7 +93,7 @@ function App() {
                   role="presentation"
                   aria-hidden="true"
                 >
-                  <use href="/icons.svg#x-icon"></use>
+                  <use href={`${baseUrl}icons.svg#x-icon`}></use>
                 </svg>
                 X.com
               </a>
@@ -111,7 +105,7 @@ function App() {
                   role="presentation"
                   aria-hidden="true"
                 >
-                  <use href="/icons.svg#bluesky-icon"></use>
+                  <use href={`${baseUrl}icons.svg#bluesky-icon`}></use>
                 </svg>
                 Bluesky
               </a>
