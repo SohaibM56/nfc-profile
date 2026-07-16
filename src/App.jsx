@@ -1,123 +1,81 @@
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from './firebase'
 import './App.css'
 import ProfileCard from './components/ProfileCard'
 
-const path = typeof window !== 'undefined' ? window.location.pathname : '/'
-const baseUrl = import.meta.env.BASE_URL || '/'
-const normalizedPath = path.endsWith('/') ? path : `${path}/`
-const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
-const isProfile = normalizedPath === normalizedBase || normalizedPath === `${normalizedBase}profile/`
+function getCardIdFromHash() {
+  const hash = typeof window !== 'undefined' ? window.location.hash : ''
+  const match = hash.match(/^#\/(.+)$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
 
 function App() {
-  if (isProfile) {
-    return <ProfileCard />
+  const [cardId, setCardId] = useState(getCardIdFromHash)
+  const [status, setStatus] = useState('loading') // loading | found | not-found | empty
+  const [card, setCard] = useState(null)
+
+  useEffect(() => {
+    const onHashChange = () => setCardId(getCardIdFromHash())
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    if (!cardId) {
+      setStatus('empty')
+      return
+    }
+
+    let cancelled = false
+    setStatus('loading')
+
+    getDoc(doc(db, 'cards', cardId))
+      .then((snapshot) => {
+        if (cancelled) return
+        if (snapshot.exists()) {
+          setCard(snapshot.data())
+          setStatus('found')
+        } else {
+          setStatus('not-found')
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setStatus('not-found')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [cardId])
+
+  if (status === 'empty') {
+    return (
+      <div className="state-page">
+        <h1>Jamil Cards</h1>
+        <p>Scan a Jamil Card's QR code to view their profile.</p>
+      </div>
+    )
   }
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-      </section>
+  if (status === 'loading') {
+    return (
+      <div className="state-page">
+        <p>Loading card…</p>
+      </div>
+    )
+  }
 
-      <div className="ticks"></div>
+  if (status === 'not-found') {
+    return (
+      <div className="state-page">
+        <h1>Card not available</h1>
+        <p>This card doesn't exist or is no longer available.</p>
+      </div>
+    )
+  }
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href={`${baseUrl}icons.svg#documentation-icon`}></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href={`${baseUrl}icons.svg#social-icon`}></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href={`${baseUrl}icons.svg#github-icon`}></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href={`${baseUrl}icons.svg#discord-icon`}></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href={`${baseUrl}icons.svg#x-icon`}></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href={`${baseUrl}icons.svg#bluesky-icon`}></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  return <ProfileCard card={card} />
 }
 
 export default App
